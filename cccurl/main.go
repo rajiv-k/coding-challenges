@@ -75,6 +75,9 @@ func main() {
 	case methodPost:
 		post(client, uri, header, data)
 
+	case methodPut:
+		put(client, uri, header, data)
+
 	default:
 		log.Fatalf("%v is not implemented\n", method)
 	}
@@ -88,7 +91,7 @@ func dumpRequest(req *http.Request) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	buf.WriteString(fmt.Sprintf("> %v %v %v\n", req.Method, req.URL.Path, req.Proto))
 	for k, v := range req.Header {
-		buf.WriteString(fmt.Sprintf("> %v: %v\n", k, v))
+		buf.WriteString(fmt.Sprintf("> %v: %v\n", k, v[0]))
 	}
 
 	return buf
@@ -128,6 +131,24 @@ func get(client *http.Client, uri string) {
 
 func post(client *http.Client, uri string, header string, data string) {
 	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data))
+	if err != nil {
+		log.Fatalf("ERROR: could not create HTTP request: %v", err)
+	}
+
+	if header != "" {
+		parts := strings.Split(header, ":")
+		if len(parts) != 2 {
+			log.Fatalf("ERROR: invalid value for header, must be of form -H 'foo: bar'")
+		}
+
+		headerKey, headerVal := parts[0], strings.TrimPrefix(parts[1], "")
+		req.Header.Add(headerKey, headerVal)
+	}
+	do(client, req)
+}
+
+func put(client *http.Client, uri string, header string, data string) {
+	req, err := http.NewRequest(http.MethodPut, uri, strings.NewReader(data))
 	if err != nil {
 		log.Fatalf("ERROR: could not create HTTP request: %v", err)
 	}
