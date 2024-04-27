@@ -62,6 +62,9 @@ func main() {
 	case methodGet:
 		get(client, uri)
 
+	case methodDelete:
+		del(client, uri)
+
 	default:
 		log.Fatalf("%v is not implemented\n", method)
 	}
@@ -93,6 +96,33 @@ func dumpResponse(resp *http.Response) *bytes.Buffer {
 	}
 
 	return buf
+}
+
+func del(client *http.Client, uri string) {
+	req, err := http.NewRequest(http.MethodDelete, uri, nil)
+	if err != nil {
+		log.Fatalf("ERROR: could not create HTTP request: %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("ERROR: could not perform HTTP request: %v", err)
+	}
+
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("ERROR: could not read HTTP response: %v", err)
+	}
+
+	if verbose {
+		b := dumpRequest(req)
+		fmt.Println(b.String())
+		bb := dumpResponse(resp)
+		fmt.Println(bb.String())
+	}
+
+	fmt.Fprintln(os.Stdout, string(data))
 }
 
 func get(client *http.Client, uri string) {
