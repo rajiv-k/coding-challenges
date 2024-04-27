@@ -30,7 +30,7 @@ func main() {
 	flag.StringVar(&executablePath, "e", "/bin/cat", "path to the executable")
 	flag.Parse()
 	if version {
-		log.Printf("%v %v\n", programName, programVersion)
+		fmt.Printf("%v %v\n", programName, programVersion)
 		os.Exit(0)
 	}
 
