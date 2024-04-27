@@ -1,4 +1,4 @@
 # Coding Challenges
 
-References:
-- https://codingchallenges.fyi/challenges/intro
+Challenges:
+- [netcat](https://codingchallenges.fyi/challenges/challenge-netcat)
