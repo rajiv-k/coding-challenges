@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -25,6 +26,8 @@ var (
 	version bool
 	verbose bool
 	method  string
+	data    string
+	header  string
 )
 
 func main() {
@@ -34,6 +37,10 @@ func main() {
 	flag.BoolVar(&verbose, "v", false, "verbose")
 	flag.StringVar(&method, "method", "GET", "HTTP method")
 	flag.StringVar(&method, "X", "GET", "HTTP method")
+	flag.StringVar(&data, "d", "", "request payload")
+	flag.StringVar(&data, "data", "", "request payload")
+	flag.StringVar(&header, "header", "", "request header")
+	flag.StringVar(&header, "H", "", "request header")
 	flag.Parse()
 
 	if version {
@@ -64,6 +71,9 @@ func main() {
 
 	case methodDelete:
 		del(client, uri)
+
+	case methodPost:
+		post(client, uri, header, data)
 
 	default:
 		log.Fatalf("%v is not implemented\n", method)
@@ -104,25 +114,7 @@ func del(client *http.Client, uri string) {
 		log.Fatalf("ERROR: could not create HTTP request: %v", err)
 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatalf("ERROR: could not perform HTTP request: %v", err)
-	}
-
-	defer resp.Body.Close()
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("ERROR: could not read HTTP response: %v", err)
-	}
-
-	if verbose {
-		b := dumpRequest(req)
-		fmt.Println(b.String())
-		bb := dumpResponse(resp)
-		fmt.Println(bb.String())
-	}
-
-	fmt.Fprintln(os.Stdout, string(data))
+	do(client, req)
 }
 
 func get(client *http.Client, uri string) {
@@ -131,6 +123,28 @@ func get(client *http.Client, uri string) {
 		log.Fatalf("ERROR: could not create HTTP request: %v", err)
 	}
 
+	do(client, req)
+}
+
+func post(client *http.Client, uri string, header string, data string) {
+	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data))
+	if err != nil {
+		log.Fatalf("ERROR: could not create HTTP request: %v", err)
+	}
+
+	if header != "" {
+		parts := strings.Split(header, ":")
+		if len(parts) != 2 {
+			log.Fatalf("ERROR: invalid value for header, must be of form -H 'foo: bar'")
+		}
+
+		headerKey, headerVal := parts[0], strings.TrimPrefix(parts[1], "")
+		req.Header.Add(headerKey, headerVal)
+	}
+	do(client, req)
+}
+
+func do(client *http.Client, req *http.Request) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalf("ERROR: could not perform HTTP request: %v", err)
