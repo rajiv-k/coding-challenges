@@ -33,7 +33,7 @@ func NewBloomFilter(numHash uint16, numBits uint64) *BloomFilter {
 	for i := uint16(0); i < numHash; i++ {
 		seed := uint32(i)
 		hashFuncs[i] = func(data []byte) uint32 {
-			h := fnv32(data)
+			h := fnv32a(data)
 			return h ^ seed
 		}
 	}
